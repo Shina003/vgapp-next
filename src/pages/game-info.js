@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../styles/game-info.module.css';
+import Link from 'next/link';
 
 export default function GameInfo() {
     const router = useRouter();
@@ -54,6 +55,11 @@ export default function GameInfo() {
                 <button onClick={() => router.push('/')} className={styles.button}>
                     Back to Home
                 </button>
+                <Link href={`/reviews-page?title=${encodeURIComponent(game.title)}`}>
+                    <button className={styles.button}>
+                        Go to Reviews Page
+                    </button>
+                </Link>
             </div>
         </div>
     );

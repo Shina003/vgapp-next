@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Box, TextField } from '@mui/material';
-import styles from '../styles/index.module.css'; // Make sure it's renamed to .module.css
+import styles from '../styles/index.module.css';
 
 function GameCard({ title }) {
     return (
@@ -64,6 +64,7 @@ export default function HomePage() {
     }
 
     return (
+        
         <div className={styles.mainArea}>
             <Box className={styles.searchBar}>
                 <TextField

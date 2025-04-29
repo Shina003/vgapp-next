@@ -34,26 +34,26 @@ export default async function handler(req, res) {
     try {
         const [results] = await pool.query(
             `SELECT 
-        v.gameID,
-        v.title,
-        v.genre, 
-        v.publisher, 
-        v.release_year, 
-        v.cost, 
-        s.NA_sales, 
-        s.EU_sales, 
-        s.JP_sales, 
-        s.other_sales, 
-        s.tot_sales
-      FROM 
-        Video_Games v
-      JOIN 
-        Sales_Data s
-      ON 
-        v.gameID = s.salesID
-      WHERE v.title = ?`,
+                v.gameID,
+                v.title,
+                v.genre, 
+                v.publisher, 
+                v.release_year, 
+                v.cost, 
+                s.NA_sales, 
+                s.EU_sales, 
+                s.JP_sales, 
+                s.other_sales,
+                (s.NA_sales + s.EU_sales + s.JP_sales + s.other_sales) AS tot_sales
+                FROM 
+                Video_Games v
+                JOIN 
+                Sales_Data s ON v.gameID = s.salesID
+                WHERE 
+                v.title = ?`,
             [decodeURIComponent(title)]
         );
+
 
         if (results.length === 0) {
             return res.status(404).json({ error: "Game not found" });
