@@ -53,9 +53,13 @@ export default function HomePage() {
 
     if (loading) return <p>Loading games…</p>;
 
-    const filteredGames = games.filter((game) =>
+    const filteredGames = Array.isArray(games)
+    ? games.filter((game) =>
+        typeof game.title === 'string' &&
         game.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      )
+    : [];
+
 
     const gamesToShow = filteredGames.slice(0, visibleCount);
 
