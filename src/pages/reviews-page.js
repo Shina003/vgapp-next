@@ -18,7 +18,6 @@ export default function ReviewsPage() {
 
     useEffect(() => {
         if (!title) return;
-
         fetch(`/api/reviews?title=${encodeURIComponent(title)}`)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch reviews');
@@ -46,18 +45,11 @@ export default function ReviewsPage() {
                 score: parseFloat(score)
             }),
         });
-
         if (res.ok) {
-            // Refresh reviews after submit
             const fresh = await fetch(`/api/reviews?title=${encodeURIComponent(title)}`);
             const updated = await fresh.json();
             setReviews(updated);
-
-            // Reset form
-            setName('');
-            setBody('');
-            setScore('');
-            setShowForm(false);
+            setName(''); setBody(''); setScore(''); setShowForm(false);
         } else {
             alert('Failed to submit review');
         }
@@ -69,16 +61,25 @@ export default function ReviewsPage() {
                 <h1 className="display-5 fw-bold mb-3">{title}</h1>
 
                 <div className="mb-4 d-flex justify-content-center gap-3">
-                    <Button variant="contained" color="primary" onClick={() => router.push(`/game-info?title=${encodeURIComponent(title)}`)}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => router.push(`/game-info?title=${encodeURIComponent(title)}`)}
+                    >
                         Go to Info Page
                     </Button>
-                    <Button variant="contained" color="primary" onClick={() => router.push('/')}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => router.push('/')}
+                    >
                         Back to Home
                     </Button>
                 </div>
 
                 <Button
-                    variant="contained" color="primary"
+                    variant="contained"
+                    color="primary"
                     className="mb-3"
                     onClick={() => setShowForm(!showForm)}
                 >
@@ -139,12 +140,10 @@ export default function ReviewsPage() {
                     style={{
                         flexGrow: 1,
                         overflowY: 'auto',
-                        height: 'calc(100vh - 300px)', // adjust this based on your layout
+                        maxHeight: '80vh',        // increased scrollable area
                         padding: '1rem',
                     }}
                 >
-
-
                     {reviews.map((review) => (
                         <div key={review.reviewID} className="card bg-light text-dark shadow-sm">
                             <div className="card-body">
