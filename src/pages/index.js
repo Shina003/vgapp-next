@@ -17,8 +17,7 @@ const SearchWrapper = styled('div')(({ theme }) => ({
   marginBottom: theme.spacing(3),
   width: '100%',
   maxWidth: 600,
-  marginLeft: 'auto',
-  marginRight: 'auto',
+  margin: '0 auto',
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
@@ -31,10 +30,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 function GameCard({ title }) {
   return (
-    <Link
-      href={`/game-info?title=${encodeURIComponent(title)}`}
-      className="text-decoration-none"
-    >
+    <Link href={`/game-info?title=${encodeURIComponent(title)}`}>
       <div className="card shadow-sm p-3 mb-3 rounded-3">
         <h5 className="mb-0">{title}</h5>
       </div>
@@ -44,37 +40,20 @@ function GameCard({ title }) {
 
 export default function HomePage() {
   const [games, setGames] = useState([]);
-  const [genres, setGenres] = useState([]);
+  const [genres, setGenres] = useState(['All']);
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(50);
   const [showButton, setShowButton] = useState(false);
 
-  // Fetch games and extract genres
+  // 1) fetch all game titles
   useEffect(() => {
     fetch('/api/game-titles')
       .then((res) => res.json())
       .then((data) => {
-        console.log('API /api/game-titles response:', data);
-        // Normalize response into an array
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data.games)
-          ? data.games
-          : [];
-
-        setGames(list);
-
-        // Extract genres robustly: handle both string and array fields
-        const rawGenres = list.flatMap((g) => {
-          if (Array.isArray(g.genres)) return g.genres;
-          if (typeof g.genre === 'string') return [g.genre];
-          return [];
-        });
-
-        const uniq = Array.from(new Set(rawGenres.filter(Boolean))).sort();
-        setGenres(uniq);
+        // data should be an array of { title, genre } after you update your API
+        setGames(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch((err) => {
@@ -83,44 +62,46 @@ export default function HomePage() {
       });
   }, []);
 
-  // Infinite scroll & show-top-button
+  // 2) fetch genres separately
   useEffect(() => {
-    const handleScroll = () => {
+    fetch('/api/genres')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setGenres(['All', ...data.filter((g) => !!g)]);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // infinite scroll + back‑to‑top button
+  useEffect(() => {
+    const onScroll = () => {
       setShowButton(window.scrollY > 300);
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 500
-      ) {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
         setVisibleCount((prev) => prev + 50);
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   if (loading) {
     return <p className="text-center mt-4">Loading games…</p>;
   }
 
-  // Ensure we always filter an array
   const safeGames = Array.isArray(games) ? games : [];
-
-  // Apply text + genre filters
-  const filteredGames = safeGames
-    .filter(
-      (g) =>
-        typeof g.title === 'string' &&
-        g.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = safeGames
+    .filter((g) =>
+      g.title.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter((g) =>
-      selectedGenre === 'All' ? true : (g.genre || g.genres || []).includes(selectedGenre)
+      selectedGenre === 'All' ? true : g.genre === selectedGenre
     );
+  const gamesToShow = filtered.slice(0, visibleCount);
 
-  const gamesToShow = filteredGames.slice(0, visibleCount);
-
-  function scrollToTop() {
+  const scrollToTop = () =>
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
 
   return (
     <>
@@ -136,7 +117,6 @@ export default function HomePage() {
               setVisibleCount(50);
             }}
           >
-            <MenuItem value="All">All</MenuItem>
             {genres.map((g) => (
               <MenuItem key={g} value={g}>
                 {g}
@@ -179,12 +159,12 @@ export default function HomePage() {
           color="primary"
           style={{
             position: 'fixed',
-            bottom: '30px',
-            right: '30px',
+            bottom: 30,
+            right: 30,
             zIndex: 1000,
             borderRadius: '50%',
-            minWidth: '56px',
-            minHeight: '56px',
+            minWidth: 56,
+            minHeight: 56,
             fontSize: '1.5rem',
           }}
           aria-label="Back to Top"
