@@ -4,6 +4,8 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     min-height: 100vh;
+    background-attachment: fixed;
+
 }
 
 /* styles/globals.css or any CSS module */
