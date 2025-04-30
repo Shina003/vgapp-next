@@ -47,13 +47,12 @@ export default function HomePage() {
   const [visibleCount, setVisibleCount] = useState(50);
   const [showButton, setShowButton] = useState(false);
 
-  // 1) fetch all game titles
   useEffect(() => {
     fetch('/api/game-titles')
       .then((res) => res.json())
       .then((data) => {
-        // data should be an array of { title, genre } after you update your API
-        setGames(Array.isArray(data) ? data : []);
+        setGames(data);
+        setGenres(['All', ...new Set(data.map((g) => g.genre).filter(Boolean))]);
         setLoading(false);
       })
       .catch((err) => {
@@ -62,19 +61,6 @@ export default function HomePage() {
       });
   }, []);
 
-  // 2) fetch genres separately
-  useEffect(() => {
-    fetch('/api/genres')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setGenres(['All', ...data.filter((g) => !!g)]);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-  // infinite scroll + back‑to‑top button
   useEffect(() => {
     const onScroll = () => {
       setShowButton(window.scrollY > 300);
@@ -86,22 +72,14 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (loading) {
-    return <p className="text-center mt-4">Loading games…</p>;
-  }
+  if (loading) return <p className="text-center mt-4">Loading games…</p>;
 
-  const safeGames = Array.isArray(games) ? games : [];
-  const filtered = safeGames
-    .filter((g) =>
-      g.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter((g) =>
-      selectedGenre === 'All' ? true : g.genre === selectedGenre
-    );
-  const gamesToShow = filtered.slice(0, visibleCount);
+  const filteredGames = games
+    .filter((g) => g.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((g) => (selectedGenre === 'All' ? true : g.genre === selectedGenre))
+    .slice(0, visibleCount);
 
-  const scrollToTop = () =>
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
     <>
@@ -138,7 +116,7 @@ export default function HomePage() {
         </SearchWrapper>
 
         <div>
-          {gamesToShow.map((game) => (
+          {filteredGames.map((game) => (
             <GameCard key={game.title} title={game.title} />
           ))}
         </div>
