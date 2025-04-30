@@ -41,7 +41,11 @@ function GameCard({ title }) {
 export default function HomePage() {
   const [games, setGames] = useState([]);
   const [genres, setGenres] = useState(['All']);
+  const [publishers, setPublishers] = useState(['All']);
+  const [years, setYears] = useState(['All']);
   const [selectedGenre, setSelectedGenre] = useState('All');
+  const [selectedPublisher, setSelectedPublisher] = useState('All');
+  const [selectedYear, setSelectedYear] = useState('All');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(50);
@@ -53,10 +57,17 @@ export default function HomePage() {
       .then((data) => {
         setGames(data);
         setGenres(['All', ...new Set(data.map((g) => g.genre).filter(Boolean))]);
+        setPublishers(['All', ...new Set(data.map((g) => g.publisher).filter(Boolean))]);
+        setYears([
+          'All',
+          ...Array.from(new Set(data.map((g) => g.release_year)))
+            .sort((a, b) => a - b)
+            .map((y) => String(y))
+        ]);
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        console.error('❌ Error loading games:', err);
         setLoading(false);
       });
   }, []);
@@ -77,6 +88,8 @@ export default function HomePage() {
   const filteredGames = games
     .filter((g) => g.title.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((g) => (selectedGenre === 'All' ? true : g.genre === selectedGenre))
+    .filter((g) => (selectedPublisher === 'All' ? true : g.publisher === selectedPublisher))
+    .filter((g) => (selectedYear === 'All' ? true : String(g.release_year) === selectedYear))
     .slice(0, visibleCount);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -84,6 +97,7 @@ export default function HomePage() {
   return (
     <>
       <Container className="mt-4">
+        {/* Genre Filter */}
         <FormControl fullWidth margin="normal">
           <InputLabel id="genre-label">Genre</InputLabel>
           <Select
@@ -96,13 +110,48 @@ export default function HomePage() {
             }}
           >
             {genres.map((g) => (
-              <MenuItem key={g} value={g}>
-                {g}
-              </MenuItem>
+              <MenuItem key={g} value={g}>{g}</MenuItem>
             ))}
           </Select>
         </FormControl>
 
+        {/* Publisher Filter */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="publisher-label">Publisher</InputLabel>
+          <Select
+            labelId="publisher-label"
+            value={selectedPublisher}
+            label="Publisher"
+            onChange={(e) => {
+              setSelectedPublisher(e.target.value);
+              setVisibleCount(50);
+            }}
+          >
+            {publishers.map((p) => (
+              <MenuItem key={p} value={p}>{p}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Release Year Filter */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="year-label">Release Year</InputLabel>
+          <Select
+            labelId="year-label"
+            value={selectedYear}
+            label="Release Year"
+            onChange={(e) => {
+              setSelectedYear(e.target.value);
+              setVisibleCount(50);
+            }}
+          >
+            {years.map((y) => (
+              <MenuItem key={y} value={y}>{y}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Search Input */}
         <SearchWrapper>
           <StyledInputBase
             placeholder="Search games…"
@@ -115,12 +164,14 @@ export default function HomePage() {
           />
         </SearchWrapper>
 
+        {/* Game List */}
         <div>
           {filteredGames.map((game) => (
-            <GameCard key={game.title} title={game.title} />
+            <GameCard key={`${game.title}-${game.release_year}`} title={game.title} />
           ))}
         </div>
 
+        {/* Top Button (inline) */}
         {showButton && (
           <div className="text-center mt-3">
             <Button onClick={scrollToTop} variant="outlined">
@@ -130,6 +181,7 @@ export default function HomePage() {
         )}
       </Container>
 
+      {/* Fixed Back to Top */}
       {showButton && (
         <Button
           onClick={scrollToTop}
